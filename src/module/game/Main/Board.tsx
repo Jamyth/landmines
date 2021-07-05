@@ -6,11 +6,11 @@ import { FaBomb } from 'react-icons/fa';
 export const Board = React.memo(() => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- parent index.tsx checked
     const { size, map } = useGameState((state) => state.game!);
-    const gridSize = (window.innerWidth - 30) / size - 2;
+    const gridSize = (window.innerWidth - 30) / (size === 8 ? 8 : 16) - 2;
 
     const onClick = (e: React.MouseEvent<HTMLDivElement>) => {
-        const x = Math.floor((e.clientX - e.currentTarget.offsetLeft) / gridSize);
-        const y = Math.floor((e.clientY - e.currentTarget.offsetTop) / gridSize);
+        const x = Math.floor((e.clientX - e.currentTarget.offsetLeft - e.currentTarget.scrollLeft) / gridSize);
+        const y = Math.floor((e.clientY - e.currentTarget.offsetTop - e.currentTarget.scrollTop) / gridSize);
         console.info(`${x}.${y}`);
     };
 
