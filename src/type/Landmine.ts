@@ -12,5 +12,4 @@ export type GameStatus = 'victory' | 'game-over' | 'running';
 export enum MarkerView {
     HAS_MARKER = 'HAS_MARKER',
     UNCERTAIN = 'UNCERTAIN',
-    NULL = 'NULL',
 }

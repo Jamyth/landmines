@@ -1,10 +1,5 @@
-import { Game, MarkerView } from 'type/Landmine';
-
-class LandmineException extends Error {
-    constructor(msg: string) {
-        super(`[LandmineUtil]: ${msg}`);
-    }
-}
+import type { Game } from 'type/Landmine';
+import { MarkerView } from 'type/Landmine';
 
 function deepClone<T extends object>(object: T): T {
     const innerDeepClone = (innerObject: any, isInnerLevel: boolean = true): any => {
@@ -14,7 +9,7 @@ function deepClone<T extends object>(object: T): T {
 
         // Primitive types: null / undefined / number / string / boolean / bigint / symbol / function
         // Because typeof null === "object", we have to judge this case first
-        if (null == innerObject || 'object' !== typeof innerObject) {
+        if (innerObject === null || typeof innerObject !== 'object') {
             return innerObject;
         }
 
@@ -29,6 +24,7 @@ function deepClone<T extends object>(object: T): T {
 
         if (innerObject instanceof Object) {
             const newObject: any = {};
+            // eslint-disable-next-line no-restricted-syntax --  that's what I want
             for (const attr in innerObject) {
                 // eslint-disable-next-line no-prototype-builtins -- using for-in loop requires checking object.hasOwnProperty to exclude properties up from the prototype chain
                 if (innerObject.hasOwnProperty(attr)) {
@@ -96,15 +92,18 @@ function hasMine(game: Game, x: number, y: number) {
 function reveal(game: Game, x: number, y: number): Game {
     const id = `${x}.${y}`;
     const cloned = deepClone(game);
-    const { revealed, map, size, markers } = cloned;
+    const { revealed, map, size, markers, landmines } = cloned;
     const isMine = hasMine(cloned, x, y);
     const isInitialClick = revealed.length === 0;
-    const hasMarker = markers[id] ?? MarkerView.NULL;
+    const hasMarker = markers[id];
 
     if (hasMarker === MarkerView.HAS_MARKER) {
         return cloned;
     }
 
+    if (revealed.includes(id)) {
+        return cloned;
+    }
     revealed.push(id);
 
     if (isMine && isInitialClick) {
@@ -122,32 +121,30 @@ function reveal(game: Game, x: number, y: number): Game {
 
     if (isMine) {
         cloned.status = 'game-over';
+        return cloned;
+    }
+
+    if (revealed.length + landmines === map.reduce((acc, curr) => acc + curr.length, 0)) {
+        cloned.status = 'victory';
     }
 
     return cloned;
 }
 
-function placeMarker(game: Game, x: number, y: number): Game {
+function placeMarker(game: Game, x: number, y: number, marker: MarkerView | null): Game {
     const id = `${x}.${y}`;
     const cloned = deepClone(game);
-    const marker = cloned.markers[id] ?? MarkerView.NULL;
-    switch (marker) {
-        case MarkerView.HAS_MARKER:
-            cloned.markers[id] = MarkerView.UNCERTAIN;
-            break;
-        case MarkerView.UNCERTAIN:
-            cloned.markers[id] = MarkerView.NULL;
-            break;
-        case MarkerView.NULL:
-            cloned.markers[id] = MarkerView.HAS_MARKER;
-            break;
+    if (!marker) {
+        delete cloned.markers[id];
+    } else {
+        cloned.markers[id] = marker;
     }
 
     return cloned;
 }
 
 function getNumberOfNearbyMine(game: Game, locationX: number, locationY: number) {
-    const result: Boolean[] = [];
+    const result: boolean[] = [];
     for (let x = 0; x < 3; x++) {
         for (let y = 0; y < 3; y++) {
             if (y === 1 && x === 1) {

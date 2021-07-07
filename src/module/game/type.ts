@@ -1,9 +1,9 @@
-import type { Game } from 'type/Landmine';
+import type { Game, MarkerView } from 'type/Landmine';
 
 export interface State {
     game: Game | null;
     level: GameLevel | null;
-    openedBox: Record<`${number}.${number}`, true> | null;
+    selectedMarker: MarkerView | 'REMOVE' | null;
 }
 
 export interface RouteParam {

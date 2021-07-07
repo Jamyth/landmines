@@ -8,8 +8,13 @@ import type { Game } from 'type/Landmine';
 const initialState: State = {
     game: null,
     level: null,
-    openedBox: null,
+    selectedMarker: null,
 };
+
+export const TimerState = Recoil.atom({
+    key: 'TimerState',
+    default: 0,
+});
 
 export const GameState = Recoil.atom({
     key: 'GameState',
@@ -18,14 +23,10 @@ export const GameState = Recoil.atom({
 
 export const useGameAction = () => {
     const { getState, setState } = useCoilState(GameState);
+    const setTime = Recoil.useSetRecoilState(TimerState);
 
-    const onRouteMatched = (routeParam: RouteParam) => {
-        const level = routeParam.level;
-        if (getState().game || level === 'custom') {
-            setState((state) => (state.level = level));
-            return;
-        }
-        let game: Game;
+    const restartGame = (level: string) => {
+        let game: Game | null = null;
         switch (level) {
             case 'easy':
                 game = LandmineUtil.init(8, 10);
@@ -38,16 +39,18 @@ export const useGameAction = () => {
                 break;
         }
         setState((state) => {
-            state.openedBox = {};
             state.game = game;
         });
+        setTime(0);
     };
 
-    const startGame = (size: number) => {
-        if (getState().game) {
+    const onRouteMatched = (routeParam: RouteParam) => {
+        const level = routeParam.level;
+        if (level === getState().level || level === 'custom') {
             return;
         }
-        setState((state) => (state.game = LandmineUtil.init(size)));
+        setState((state) => (state.level = level));
+        restartGame(level);
     };
 
     const sweep = (x: number, y: number) => {
@@ -58,10 +61,33 @@ export const useGameAction = () => {
         }
     };
 
+    const placeMarker = (x: number, y: number) => {
+        const game = getState().game;
+        const marker = getState().selectedMarker;
+        if (game) {
+            const newGame = LandmineUtil.placeMarker(game, x, y, marker === 'REMOVE' ? null : marker);
+            setState((state) => {
+                state.selectedMarker = null;
+                state.game = newGame;
+            });
+        }
+    };
+
+    const selectMarker = (marker: Exclude<State['selectedMarker'], null>) => {
+        const currentMarker = getState().selectedMarker;
+        if (currentMarker === marker) {
+            setState((state) => (state.selectedMarker = null));
+        } else {
+            setState((state) => (state.selectedMarker = marker));
+        }
+    };
+
     return {
-        startGame,
+        restartGame,
         onRouteMatched,
         sweep,
+        selectMarker,
+        placeMarker,
     };
 };
 
