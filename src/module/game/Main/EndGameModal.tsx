@@ -22,6 +22,7 @@ export const EndGameModal = React.memo(({ status }: Props) => {
     const isVictory = status === 'victory';
     const history = useHistory();
     const canToNextLevel = ['easy', 'medium'].includes(level);
+    const [showModal, setShowModal] = React.useState(true);
 
     const goToNextLevel = () => {
         if (!canToNextLevel) {
@@ -38,8 +39,8 @@ export const EndGameModal = React.memo(({ status }: Props) => {
         history.push(url);
     };
 
-    return (
-        <Modal title={isVictory ? 'Level Complete' : 'Game Over'} onClose={() => {}}>
+    return showModal ? (
+        <Modal title={isVictory ? 'Level Complete' : 'Game Over'} onClose={() => setShowModal(false)}>
             <Heading textAlign="center" mb={2} size="lg">
                 {isVictory ? 'Congratulations' : 'Oops'}
             </Heading>
@@ -61,5 +62,7 @@ export const EndGameModal = React.memo(({ status }: Props) => {
                 )}
             </Flex>
         </Modal>
+    ) : (
+        <Box position="fixed" top={0} left={0} h="100%" w="100%" onClick={() => setShowModal(true)} />
     );
 });

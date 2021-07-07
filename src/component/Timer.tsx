@@ -10,7 +10,7 @@ interface Props {
 
 export const Timer = React.memo(({ startCount = false, value, setValue }: Props) => {
     const isControlled = value !== undefined && setValue !== undefined;
-    const [count, setCount] = React.useState(0);
+    const [count, setCount] = React.useState(value ?? 0);
 
     const [hour, minute, second] = TimeUtil.format(isControlled ? (value as number) : count);
 
@@ -30,6 +30,12 @@ export const Timer = React.memo(({ startCount = false, value, setValue }: Props)
             window.clearInterval(interval);
         };
     }, [setValue, startCount]);
+
+    React.useEffect(() => {
+        if (value === 0) {
+            setCount(0);
+        }
+    }, [value]);
 
     return (
         <Digital7Text color="red.600" fontWeight="bold" fontSize="2em" backgroundColor="gray.800" px={2}>
