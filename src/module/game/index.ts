@@ -50,9 +50,18 @@ export const useGameAction = () => {
         setState((state) => (state.game = LandmineUtil.init(size)));
     };
 
+    const sweep = (x: number, y: number) => {
+        const game = getState().game;
+        if (game) {
+            const newGame = LandmineUtil.reveal(game, x, y);
+            setState((state) => (state.game = newGame));
+        }
+    };
+
     return {
         startGame,
         onRouteMatched,
+        sweep,
     };
 };
 

@@ -1,43 +1,58 @@
-import { Flex } from '@chakra-ui/react';
 import React from 'react';
 import { useGameState } from '../hooks';
-import { FaBomb } from 'react-icons/fa';
+import { Grid } from 'component/Grid';
+import { Box } from '@chakra-ui/react';
+import { Mine } from 'component/Mine';
+import { LandmineUtil } from 'util/LandmineUtil';
+import { useGameAction } from '../index';
 
-export const Board = React.memo(() => {
+interface Props {
+    scrollTop: number;
+}
+
+export const Board = React.memo(({ scrollTop }: Props) => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- parent index.tsx checked
-    const { size, map } = useGameState((state) => state.game!);
-    const gridSize = (window.innerWidth - 30) / (size === 8 ? 8 : 16) - 2;
+    const game = useGameState((state) => state.game!);
+    const { size, map, revealed, markers } = game;
+    const gridSize = (window.innerWidth - 30) / (size === 8 ? 8 : 16);
+    const borderTopLeft = '5px solid #666';
+    const borderBottomRight = '5px solid #ddd';
+    const { sweep } = useGameAction();
 
-    const onClick = (e: React.MouseEvent<HTMLDivElement>) => {
-        const x = Math.floor((e.clientX - e.currentTarget.offsetLeft - e.currentTarget.scrollLeft) / gridSize);
-        const y = Math.floor((e.clientY - e.currentTarget.offsetTop - e.currentTarget.scrollTop) / gridSize);
-        console.info(`${x}.${y}`);
+    const onClick = (x: number, y: number, e: React.MouseEvent<HTMLDivElement>) => {
+        sweep(x, y);
     };
 
     return (
-        <Flex flexDirection="column" onClick={onClick}>
-            {map.map((row, y) => {
-                return (
-                    // eslint-disable-next-line react/no-array-index-key -- index
-                    <Flex key={`row-${y}`}>
-                        {row.map((mine, x) => {
-                            return (
-                                <Flex
-                                    justifyContent="center"
-                                    alignItems="center"
-                                    // eslint-disable-next-line react/no-array-index-key -- index
-                                    key={`${x}.${y}`}
-                                    w={`${gridSize}px`}
-                                    h={`${gridSize}px`}
-                                    border="1px solid #333"
-                                >
-                                    {mine ? <FaBomb /> : null}
-                                </Flex>
-                            );
-                        })}
-                    </Flex>
-                );
-            })}
-        </Flex>
+        <Box
+            backgroundColor="#bababa"
+            borderTop={borderTopLeft}
+            borderLeft={borderTopLeft}
+            borderRight={borderBottomRight}
+            borderBottom={borderBottomRight}
+        >
+            <Grid source={map} onClick={onClick} size={gridSize} scrollTop={scrollTop}>
+                {(isLandmine, x, y) => {
+                    const key = `${x}.${y}`;
+                    const isRevealed = revealed.includes(key);
+                    const numberOfMine = LandmineUtil.getNumberOfNearbyMine(game, x, y);
+                    const marker = markers[key];
+
+                    if (isLandmine) {
+                        return <Mine.Bomb key={key} size={gridSize} />;
+                    }
+
+                    if (isRevealed) {
+                        return <Mine.Number key={key} size={gridSize} value={numberOfMine} />;
+                    }
+
+                    if (marker) {
+                        return <Mine.Marker size={gridSize} key={key} type={marker} />;
+                    }
+
+                    return <Mine key={key} size={gridSize} />;
+                }}
+            </Grid>
+        </Box>
     );
 });
