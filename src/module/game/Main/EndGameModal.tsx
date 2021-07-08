@@ -13,6 +13,16 @@ interface Props {
     status: Exclude<GameStatus, 'running'>;
 }
 
+function vibrate(status: Props['status']) {
+    try {
+        if (status === 'game-over') {
+            window.navigator.vibrate(500);
+        }
+    } catch (error) {
+        console.info('Vibration is not supported.');
+    }
+}
+
 export const EndGameModal = React.memo(({ status }: Props) => {
     const time = Recoil.useRecoilValue(TimerState);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- game has begun
@@ -22,7 +32,7 @@ export const EndGameModal = React.memo(({ status }: Props) => {
     const isVictory = status === 'victory';
     const history = useHistory();
     const canToNextLevel = ['easy', 'medium'].includes(level);
-    const [showModal, setShowModal] = React.useState(true);
+    const [showModal, setShowModal] = React.useState(false);
 
     const goToNextLevel = () => {
         if (!canToNextLevel) {
@@ -39,8 +49,26 @@ export const EndGameModal = React.memo(({ status }: Props) => {
         history.push(url);
     };
 
+    React.useEffect(() => {
+        vibrate(status);
+    }, [status]);
+
+    React.useEffect(() => {
+        const timeout = setTimeout(() => {
+            setShowModal(true);
+        }, 500);
+
+        return () => {
+            clearTimeout(timeout);
+        };
+    }, []);
+
     return showModal ? (
-        <Modal title={isVictory ? 'Level Complete' : 'Game Over'} onClose={() => setShowModal(false)}>
+        <Modal
+            title={isVictory ? 'Level Complete' : 'Game Over'}
+            onAnimationEnd={() => setShowModal(false)}
+            onClose={() => setShowModal(false)}
+        >
             <Heading textAlign="center" mb={2} size="lg">
                 {isVictory ? 'Congratulations' : 'Oops'}
             </Heading>

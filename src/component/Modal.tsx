@@ -13,13 +13,14 @@ interface Props {
     onClose: () => void;
     title?: string;
     children: SafeReactChildren;
+    onAnimationEnd?: React.AnimationEventHandler<HTMLElement>;
 }
 
-export const Modal = React.memo(({ onClose, title, children }: Props) => {
+export const Modal = React.memo(({ onClose, title, children, onAnimationEnd }: Props) => {
     return (
         <ChakraModal isOpen onClose={onClose} size="xs" isCentered>
             <ModalOverlay />
-            <ModalContent>
+            <ModalContent onAnimationEnd={onAnimationEnd}>
                 <ModalHeader>{title}</ModalHeader>
                 <ModalCloseButton />
                 <ModalBody pb={6}>{children}</ModalBody>

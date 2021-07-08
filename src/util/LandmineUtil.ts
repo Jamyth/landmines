@@ -104,6 +104,7 @@ function reveal(game: Game, x: number, y: number): Game {
     if (revealed.includes(id)) {
         return cloned;
     }
+
     revealed.push(id);
 
     if (isMine && isInitialClick) {
@@ -116,16 +117,25 @@ function reveal(game: Game, x: number, y: number): Game {
                 replaced = true;
             }
         }
-        return cloned;
+        // return cloned;
     }
 
-    if (isMine) {
+    if (isMine && !isInitialClick) {
         cloned.status = 'game-over';
-        return cloned;
+        const allMineLocations = getAllMinesCoordinate(cloned);
+        return allMineLocations.reduce((game, [_x, _y]) => reveal(game, _x, _y), cloned);
     }
 
     if (revealed.length + landmines === map.reduce((acc, curr) => acc + curr.length, 0)) {
         cloned.status = 'victory';
+        return cloned;
+    }
+
+    const numberOfNearbyMines = getNumberOfNearbyMine(cloned, x, y);
+
+    if (numberOfNearbyMines === 0) {
+        const revealable = getSurroundingCoordinate(cloned, x, y);
+        return revealable.reduce((game, [x, y]) => reveal(game, x, y), cloned);
     }
 
     return cloned;
@@ -163,6 +173,38 @@ function getNumberOfNearbyMine(game: Game, locationX: number, locationY: number)
         }
     }
     return result.filter(Boolean).length;
+}
+
+function getSurroundingCoordinate(game: Game, locationX: number, locationY: number) {
+    const result: [number, number][] = [];
+
+    for (let x = 0; x < 3; x++) {
+        for (let y = 0; y < 3; y++) {
+            if (x === 1 && y === 1) {
+                continue;
+            }
+            const _x = locationX + x - 1;
+            const _y = locationY + y - 1;
+            const isValid = game.map[_y]?.[_x];
+            if (typeof isValid === 'boolean') {
+                result.push([_x, _y]);
+            }
+        }
+    }
+
+    return result;
+}
+
+function getAllMinesCoordinate(game: Game) {
+    const result: [number, number][] = [];
+    game.map.forEach((row, y) => {
+        row.forEach((cell, x) => {
+            if (cell === true) {
+                result.push([x, y]);
+            }
+        });
+    });
+    return result;
 }
 
 export const LandmineUtil = Object.freeze({
