@@ -5,9 +5,11 @@ import { Mine } from '../Mine';
 
 interface Props extends BaseProps {
     value: number;
+    onMouseDown?: () => void;
+    onMouseUp?: () => void;
 }
 
-export const Number = React.memo(({ size, value }: Props) => {
+export const Number = React.memo(({ size, value, onMouseDown, onMouseUp }: Props) => {
     const getSeverityColor = () => {
         switch (value) {
             case 1:
@@ -31,7 +33,7 @@ export const Number = React.memo(({ size, value }: Props) => {
         return <Mine size={size} revealed />;
     }
     return (
-        <Mine size={size} fontSize={size / 1.5} revealed>
+        <Mine size={size} fontSize={size / 1.5} revealed onMouseDown={onMouseDown} onMouseUp={onMouseUp}>
             <Digital7Text color={getSeverityColor()}>{value}</Digital7Text>
         </Mine>
     );

@@ -13,6 +13,9 @@ interface Props extends BaseProps {
     fontSize?: number;
     revealed?: boolean;
     children?: SafeReactChild;
+    highlighted?: boolean;
+    onMouseDown?: () => void;
+    onMouseUp?: () => void;
 }
 
 export class Mine extends React.PureComponent<Props> {
@@ -25,9 +28,9 @@ export class Mine extends React.PureComponent<Props> {
     private readonly unRevealedBorderDark = '3px solid #666';
 
     override render() {
-        const { size, children, revealed = false, fontSize } = this.props;
-        const borderTopLeft = revealed ? this.revealedBorder : this.unRevealedBorderLight;
-        const borderBottomRight = revealed ? this.revealedBorder : this.unRevealedBorderDark;
+        const { size, children, revealed = false, fontSize, highlighted, onMouseDown, onMouseUp } = this.props;
+        const borderTopLeft = revealed || highlighted === true ? this.revealedBorder : this.unRevealedBorderLight;
+        const borderBottomRight = revealed || highlighted === true ? this.revealedBorder : this.unRevealedBorderDark;
 
         return (
             <Flex
@@ -40,6 +43,16 @@ export class Mine extends React.PureComponent<Props> {
                 borderRight={borderBottomRight}
                 borderBottom={borderBottomRight}
                 fontSize={`${fontSize ? fontSize : size / 1.8}px`}
+                onMouseDown={(e) => {
+                    e.stopPropagation();
+                    onMouseDown?.();
+                }}
+                onMouseUp={onMouseUp}
+                onTouchStart={(e) => {
+                    e.stopPropagation();
+                    onMouseDown?.();
+                }}
+                onTouchEnd={onMouseUp}
             >
                 {children}
             </Flex>

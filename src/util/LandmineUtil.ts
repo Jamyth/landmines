@@ -89,9 +89,8 @@ function hasMine(game: Game, x: number, y: number) {
     return game.map[y][x] === true;
 }
 
-function reveal(game: Game, x: number, y: number): Game {
+function reveal(cloned: Game, x: number, y: number): Game {
     const id = `${x}.${y}`;
-    const cloned = deepClone(game);
     const { revealed, map, size, markers, landmines } = cloned;
     const isMine = hasMine(cloned, x, y);
     const isInitialClick = revealed.length === 0;
@@ -101,8 +100,10 @@ function reveal(game: Game, x: number, y: number): Game {
         return cloned;
     }
 
+    const numberOfNearbyMines = getNumberOfNearbyMine(cloned, x, y);
+
     if (revealed.includes(id)) {
-        return cloned;
+        return revealSurroundingWithoutFlags(cloned, x, y, numberOfNearbyMines);
     }
 
     revealed.push(id);
@@ -117,7 +118,6 @@ function reveal(game: Game, x: number, y: number): Game {
                 replaced = true;
             }
         }
-        // return cloned;
     }
 
     if (isMine && !isInitialClick) {
@@ -131,13 +131,33 @@ function reveal(game: Game, x: number, y: number): Game {
         return cloned;
     }
 
-    const numberOfNearbyMines = getNumberOfNearbyMine(cloned, x, y);
-
     if (numberOfNearbyMines === 0) {
         const revealable = getSurroundingCoordinate(cloned, x, y);
         return revealable.reduce((game, [x, y]) => reveal(game, x, y), cloned);
+    } else {
+        return revealSurroundingWithoutFlags(cloned, x, y, numberOfNearbyMines);
     }
 
+    return cloned;
+}
+
+function revealSurroundingWithoutFlags(cloned: Game, x: number, y: number, numberOfNearbyMines: number) {
+    if (numberOfNearbyMines > 0) {
+        const surroundings = getSurroundingCoordinate(cloned, x, y);
+        const revealableOrFlags = surroundings.map(([x, y]) => {
+            const _id = `${x}.${y}`;
+            return cloned.markers[_id] === MarkerView.HAS_MARKER
+                ? 'flag'
+                : !cloned.revealed.includes(`${x}.${y}`)
+                ? [x, y]
+                : null;
+        });
+        const numberOfFlags = revealableOrFlags.filter((_) => _ === 'flag').length;
+        if (numberOfFlags === numberOfNearbyMines) {
+            const revealable = revealableOrFlags.filter((_): _ is [number, number] => _ !== null && _ !== 'flag');
+            return revealable.reduce((game, [x, y]) => reveal(game, x, y), cloned);
+        }
+    }
     return cloned;
 }
 
@@ -209,7 +229,9 @@ function getAllMinesCoordinate(game: Game) {
 
 export const LandmineUtil = Object.freeze({
     init,
+    deepClone,
     reveal,
     placeMarker,
     getNumberOfNearbyMine,
+    getSurroundingCoordinate,
 });

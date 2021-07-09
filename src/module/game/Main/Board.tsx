@@ -267,9 +267,10 @@ export const Board = React.memo(({ scrollTop }: Props) => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- parent index.tsx checked
     const game = useGameState((state) => state.game!);
     const selectedMarker = useGameState((state) => state.selectedMarker);
+    const highlighted = useGameState((state) => state.highlighted);
     const { size, map, revealed, markers, status } = game;
     const gridSize = (window.innerWidth - 40) / (size === 8 ? 8 : 16);
-    const { sweep, placeMarker } = useGameAction();
+    const { sweep, placeMarker, highlightNearby, clearHighlight } = useGameAction();
     const prefersReducedMotion = usePrefersReducedMotion();
     const shakeAnimation = status !== 'game-over' || prefersReducedMotion ? undefined : `${shake} 0.5s ease-in-out`;
 
@@ -281,6 +282,10 @@ export const Board = React.memo(({ scrollTop }: Props) => {
         }
     };
 
+    const highlightedSurrounding = highlighted
+        ? LandmineUtil.getSurroundingCoordinate(game, highlighted[0], highlighted[1])
+        : [];
+
     return (
         <ConcaveFlex mb={2} animation={shakeAnimation}>
             <Grid source={map} onClick={onClick} size={gridSize} scrollTop={scrollTop}>
@@ -289,19 +294,30 @@ export const Board = React.memo(({ scrollTop }: Props) => {
                     const isRevealed = revealed.includes(key);
                     const numberOfMine = LandmineUtil.getNumberOfNearbyMine(game, x, y);
                     const marker = markers[key];
+                    const isHighlighted = highlightedSurrounding.find(([_x, _y]) => _x === x && _y === y);
 
                     if (isRevealed) {
                         if (isLandmine) {
                             return <Mine.Bomb key={key} size={gridSize} />;
                         }
-                        return <Mine.Number key={key} size={gridSize} value={numberOfMine} />;
+                        return (
+                            <Mine.Number
+                                onMouseDown={() => {
+                                    highlightNearby(x, y);
+                                }}
+                                onMouseUp={clearHighlight}
+                                key={key}
+                                size={gridSize}
+                                value={numberOfMine}
+                            />
+                        );
                     }
 
                     if (marker) {
                         return <Mine.Marker size={gridSize} key={key} type={marker} />;
                     }
 
-                    return <Mine key={key} size={gridSize} />;
+                    return <Mine key={key} size={gridSize} highlighted={!!isHighlighted} />;
                 }}
             </Grid>
         </ConcaveFlex>

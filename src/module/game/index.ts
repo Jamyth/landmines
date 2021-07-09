@@ -9,6 +9,7 @@ const initialState: State = {
     game: null,
     level: null,
     selectedMarker: null,
+    highlighted: null,
 };
 
 export const TimerState = Recoil.atom({
@@ -56,7 +57,7 @@ export const useGameAction = () => {
     const sweep = (x: number, y: number) => {
         const game = getState().game;
         if (game) {
-            const newGame = LandmineUtil.reveal(game, x, y);
+            const newGame = LandmineUtil.reveal(LandmineUtil.deepClone(game), x, y);
             setState((state) => (state.game = newGame));
         }
     };
@@ -65,7 +66,12 @@ export const useGameAction = () => {
         const game = getState().game;
         const marker = getState().selectedMarker;
         if (game) {
-            const newGame = LandmineUtil.placeMarker(game, x, y, marker === 'REMOVE' ? null : marker);
+            const newGame = LandmineUtil.placeMarker(
+                LandmineUtil.deepClone(game),
+                x,
+                y,
+                marker === 'REMOVE' ? null : marker,
+            );
             setState((state) => {
                 state.selectedMarker = null;
                 state.game = newGame;
@@ -82,12 +88,22 @@ export const useGameAction = () => {
         }
     };
 
+    const highlightNearby = (x: number, y: number) => {
+        setState((state) => (state.highlighted = [x, y]));
+    };
+
+    const clearHighlight = () => {
+        setState((state) => (state.highlighted = null));
+    };
+
     return {
         restartGame,
         onRouteMatched,
         sweep,
         selectMarker,
         placeMarker,
+        highlightNearby,
+        clearHighlight,
     };
 };
 
