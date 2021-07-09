@@ -9,7 +9,9 @@
         "lint": "yarn run-script script/lint.ts",
         "build": "yarn run-script script/build.ts",
         "module": "coil-react",
-        "start": "yarn run-script script/start.ts"
+        "start": "yarn run-script script/start.ts",
+        "docker": "docker image build -t minesweeper .",
+        "run-docker": "docker run --rm -p 80:80 minesweeper"
     },
     "files": [
         "dist/**"
