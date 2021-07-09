@@ -34,9 +34,7 @@ export const Number = React.memo(({ size, value, onMouseDown, onMouseUp }: Props
     }
     return (
         <Mine size={size} fontSize={size / 1.5} revealed onMouseDown={onMouseDown} onMouseUp={onMouseUp}>
-            <Digital7Text color={getSeverityColor()} userSelect="none">
-                {value}
-            </Digital7Text>
+            <Digital7Text color={getSeverityColor()}>{value}</Digital7Text>
         </Mine>
     );
 });

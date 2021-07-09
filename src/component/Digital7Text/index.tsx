@@ -9,7 +9,7 @@ export const Digital7Text = React.memo(({ children, ...rest }: Props) => {
     return (
         <React.Fragment>
             <Digital7Font />
-            <Box fontFamily="digital-7" {...rest}>
+            <Box fontFamily="digital-7" userSelect="none" {...rest}>
                 {children}
             </Box>
         </React.Fragment>
