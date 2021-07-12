@@ -164,6 +164,11 @@ function revealSurroundingWithoutFlags(cloned: Game, x: number, y: number, numbe
 function placeMarker(game: Game, x: number, y: number, marker: MarkerView | null): Game {
     const id = `${x}.${y}`;
     const cloned = deepClone(game);
+
+    if (cloned.revealed.includes(id)) {
+        return cloned;
+    }
+
     if (!marker) {
         delete cloned.markers[id];
     } else {
